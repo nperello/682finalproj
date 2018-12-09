@@ -1,0 +1,29 @@
+\begin{thebibliography}{1}\itemsep=-1pt
+
+\bibitem{Authors14c}
+W.~Bainbridge, P.~Isola, and A.~Oliva.
+\newblock The intrinsic memorability of face photographs, 2013.
+\newblock In \textit{Journal of Experimental Psychology: General}, pages 1323 -
+  1334.
+
+\bibitem{Authors14}
+J.~Buolamwini and T.~Gebru.
+\newblock Gender shades: Intersectional accuracy disparities in commercial
+  gender classification, 2018.
+\newblock In \textit{Conference on Fairness, Accountability and Transparency},
+  pages 77–91.
+
+\bibitem{Authors14b}
+G.~Levi and T.~Hassner.
+\newblock Age and gender classification using convolutional neural networks,
+  2015.
+\newblock In \textit{IEEE Conf. on Computer Vision and Pattern Recognition
+  (CVPR) workshops}.
+
+\bibitem{Authors14d}
+Z.~Zhang, Y.~Song, and H.~Qi.
+\newblock The intrinsic memorability of face photographs, 2017.
+\newblock In \textit{IEEE Conference on Computer Vision and Pattern Recognition
+  (CVPR)}.
+
+\end{thebibliography}
