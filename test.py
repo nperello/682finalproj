@@ -60,26 +60,15 @@ class ConvNet(nn.Module):
     def __init__(self):
         super(ConvNet, self).__init__()
         self.layer1 = nn.Sequential(
-            nn.Conv2d(3, 96, kernel_size=7, stride=1, padding=0),
+            nn.Conv2d(3, 16, kernel_size=5, stride=1, padding=2),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2))
         self.layer2 = nn.Sequential(
-            nn.Conv2d(96, 256, kernel_size=5, stride=1, padding=2),
+            nn.Conv2d(16, 32, kernel_size=5, stride=1, padding=2),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=2, stride=2))
-        self.layer3 = nn.Sequential(
-            nn.Conv2d(256, 384, kernel_size=3, stride=1, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=2, stride=2))
-        self.fc1 = nn.Sequential(
-            nn.Linear(3*3*384, 512),
-            nn.ReLU())
-        self.fc2 = nn.Sequential(
-            nn.Linear(512, 512),
-            nn.ReLU())
-        self.fc3 = nn.Sequential(
-            nn.Linear(512, 10),
-            nn.ReLU())
+        self.fc = nn.Linear(5*5*32, 10)
+
 
     def forward(self, x):
         #print(x.shape)
@@ -87,15 +76,11 @@ class ConvNet(nn.Module):
         #print(out.shape)
         out = self.layer2(out)
         #print(out.shape)
-        out = self.layer3(out)
-        #print(out.shape)
-        out = F.interpolate(out, size=(3, 3), mode='bilinear')
+        out = F.interpolate(out, size=(5, 5), mode='bilinear')
         #print(out.shape)
         out = out.view(out.size(0),-1)
         #print(out.shape)
-        out = self.fc1(out)
-        out = self.fc2(out)
-        out = self.fc3(out)
+        out = self.fc(out)
         return F.log_softmax(out)
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -121,6 +106,7 @@ def check_accuracy(loader, model):
             x = x.to(device=device, dtype=torch.float)  # move to device, e.g. GPU
             y = y.to(device=device, dtype=torch.long)
             scores = model(x)
+            print(scores)
             _, preds = scores.max(1)
             num_correct += (preds == y).sum()
             num_samples += preds.size(0)
@@ -154,7 +140,8 @@ for epoch in range(2):  # loop over the dataset multiple times
         outputs = model(inputs)
         #print(outputs.shape)
         #print(labels.shape)
-
+        print(inputs.shape)
+        print(labels.shape)
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()

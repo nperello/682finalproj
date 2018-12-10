@@ -69,7 +69,7 @@ for i in range(len(dataset)):
     if i == 3:
         break
 
-batch_size = 4
+batch_size = 50
 validation_split = .2
 shuffle_dataset = True
 random_seed= 42
@@ -138,10 +138,12 @@ class ConvNet(nn.Module):
             nn.MaxPool2d(kernel_size=2, stride=2))
         self.fc1 = nn.Sequential(
             nn.Linear(3*3*384, 512),
-            nn.ReLU())
+            nn.ReLU(),
+            nn.Dropout(0.5))
         self.fc2 = nn.Sequential(
             nn.Linear(512, 512),
-            nn.ReLU())
+            nn.ReLU(),
+            nn.Dropout(0.5))
         self.fc3 = nn.Sequential(
             nn.Linear(512, 2),
             nn.ReLU())
@@ -163,32 +165,44 @@ class ConvNet(nn.Module):
         out = self.fc3(out)
         return F.log_softmax(out)
 
+def init_weights(m):
+    if type(m) == nn.Linear or type(m) == nn.Conv2d:
+        nn.init.xavier_uniform_(m.weight)
+
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 # Hyper parameters
-num_epochs = 2
+num_epochs = 3
 num_classes = 2
-learning_rate = 0.001
+learning_rate = 0.00001
 
 model = ConvNet().to(device)
+model.apply(init_weights)
 
 # Loss and optimizer
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 def check_accuracy(loader, model):
-    if loader.dataset.train:
-        print('Checking accuracy on validation set')
-    else:
-        print('Checking accuracy on test set')
+
     num_correct = 0
     num_samples = 0
     model.eval()  # set model to evaluation mode
     with torch.no_grad():
-        for x, y in loader:
-            x = x.to(device=device, dtype=torch.float)  # move to device, e.g. GPU
+        for data in loader:
+            #print(data)
+            #print()
+            x = data['image'].float()
+            #print(x)
+            #print()
+            x= x.to(device=device, dtype=torch.float)  # move to device, e.g. GPU
+            #print("BUG")
+            #print(data['labels'])
+            y = data['labels'].long()
+            y = y.view(y.numel())
             y = y.to(device=device, dtype=torch.long)
             scores = model(x)
+            #print(scores)
             _, preds = scores.max(1)
             num_correct += (preds == y).sum()
             num_samples += preds.size(0)
@@ -206,11 +220,13 @@ def train_model(model, optimizer, criterion, device, num_epochs=1):
                 print(x)
             images = x['image'].float()
             labels= x['labels'].long()
+            labels = labels.view(labels.numel())
             images = images.to(device)
             labels = labels.to(device)
             # Forward pass
             outputs = model(images)
-            loss = criterion(outputs, torch.max(labels, 1)[1])
+            #print(labels)
+            loss = criterion(outputs, labels)
 
             # Backward and optimize
             optimizer.zero_grad()
@@ -219,9 +235,22 @@ def train_model(model, optimizer, criterion, device, num_epochs=1):
 
             # print statistics
             running_loss += loss.item()
-            if i % 2000 == 1999:    # print every 2000 mini-batches
+            if i % 50 == 49:    # print every 2000 mini-batches
                 print('[%d, %5d] loss: %.3f' %
                       (epoch + 1, i + 1, running_loss / 2000))
-                check_accuracy(validation_loader, model)
+                #check_accuracy(validation_loader, model)
                 running_loss = 0.0
-train_model(model, optimizer, criterion, device)
+"""for i_batch, sample_batched in enumerate(train_loader):
+    print(i_batch, sample_batched['image'].size(),
+            sample_batched['labels'].size())
+    print(sample_batched)
+    print()
+    x = sample_batched['image'].float()
+    print(x)
+    print()
+    print("BUG")
+    print(sample_batched['labels'])"""
+
+train_model(model, optimizer, criterion, device, num_epochs)
+
+check_accuracy(validation_loader, model)
