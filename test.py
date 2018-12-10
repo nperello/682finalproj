@@ -106,8 +106,8 @@ def check_accuracy(loader, model):
             x = x.to(device=device, dtype=torch.float)  # move to device, e.g. GPU
             y = y.to(device=device, dtype=torch.long)
             scores = model(x)
-            print(scores)
             _, preds = scores.max(1)
+            print(preds)
             num_correct += (preds == y).sum()
             num_samples += preds.size(0)
         acc = float(num_correct) / num_samples
@@ -140,8 +140,6 @@ for epoch in range(2):  # loop over the dataset multiple times
         outputs = model(inputs)
         #print(outputs.shape)
         #print(labels.shape)
-        print(inputs.shape)
-        print(labels.shape)
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()

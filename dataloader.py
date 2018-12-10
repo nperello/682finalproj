@@ -37,7 +37,7 @@ class UTKFaceDataset(Dataset):
         labels = self.labels_frame.iloc[idx, 1:].as_matrix()
         labels = labels.astype('float')#.reshape(-1, 2)
         image = np.asarray(image)/255
-        sample = {'image': image, 'labels': labels}
+        sample = {'image': image, 'labels': labels, 'name': img_name}
         if self.transform:
             sample = self.transform(sample)
 
@@ -58,6 +58,10 @@ class ToTensor(object):
                 'labels': torch.from_numpy(labels)}
 
 dataset = UTKFaceDataset(csv_file='UTKfacesaligngender.csv',
+                        root_dir='alignedimgs/',
+                        transform=transforms.Compose([ToTensor()]))
+
+datasetB = UTKFaceDataset(csv_file='UTKfacesaligngenderB.csv',
                         root_dir='alignedimgs/',
                         transform=transforms.Compose([ToTensor()]))
 #print(dataset[0])
@@ -88,7 +92,7 @@ valid_sampler = torch.utils.data.sampler.SubsetRandomSampler(val_indices)
 
 train_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
                                            sampler=train_sampler)
-validation_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+validation_loader = torch.utils.data.DataLoader(datasetB, batch_size=batch_size,
                                                 sampler=valid_sampler)
 
 print(len(train_loader)*batch_size)
