@@ -42,7 +42,7 @@ class UTKFaceDataset(Dataset):
             sample = self.transform(sample)
 
 
-        return sample
+        return sample, img_name
 
 class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
@@ -57,17 +57,15 @@ class ToTensor(object):
         return {'image': torch.from_numpy(image),
                 'labels': torch.from_numpy(labels)}
 
-dataset = UTKFaceDataset(csv_file='UTKfacesaligngender.csv',
+dataset = UTKFaceDataset(csv_file='UTKfacesalignrace.csv',
                         root_dir='alignedimgs/',
                         transform=transforms.Compose([ToTensor()]))
-#print(dataset[0])
-for i in range(len(dataset)):
-    sample = dataset[i]
 
-    print(i, sample['image'].size(), sample['labels'].size())
+datasetB = UTKFaceDataset(csv_file='UTKfacesaligngenderB.csv',
+                        root_dir='alignedimgs/',
+                        transform=transforms.Compose([ToTensor()]))
+print(dataset[0])
 
-    if i == 3:
-        break
 
 batch_size = 50
 validation_split = .2
@@ -93,6 +91,10 @@ validation_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
 
 print(len(train_loader)*batch_size)
 print(len(validation_loader)*batch_size)
+for i_batch, sample_batched in enumerate(train_loader):
+        print(i_batch, sample_batched)
+        break
+
 def show_landmarks_batch(sample_batched):
     images_batch, labels_batch = \
             sample_batched['image'], sample_batched['labels']
@@ -145,7 +147,7 @@ class ConvNet(nn.Module):
             nn.ReLU(),
             nn.Dropout(0.5))
         self.fc3 = nn.Sequential(
-            nn.Linear(512, 2),
+            nn.Linear(512, 5),
             nn.ReLU())
 
     def forward(self, x):
@@ -172,9 +174,9 @@ def init_weights(m):
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 # Hyper parameters
-num_epochs = 3
-num_classes = 2
-learning_rate = 0.00001
+num_epochs = 40
+num_classes = 5
+learning_rate = 0.0001
 
 model = ConvNet().to(device)
 model.apply(init_weights)
@@ -191,6 +193,9 @@ def check_accuracy(loader, model):
     with torch.no_grad():
         for data in loader:
             #print(data)
+            names = data[1]
+            data = data[0]
+            #print(data)
             #print()
             x = data['image'].float()
             #print(x)
@@ -204,6 +209,8 @@ def check_accuracy(loader, model):
             scores = model(x)
             #print(scores)
             _, preds = scores.max(1)
+            #print(preds)
+            #print(names)
             num_correct += (preds == y).sum()
             num_samples += preds.size(0)
         acc = float(num_correct) / num_samples
@@ -216,8 +223,10 @@ def train_model(model, optimizer, criterion, device, num_epochs=1):
         running_loss = 0.0
         for i, x in enumerate(train_loader):
             model.train()
-            if i == 0:
-                print(x)
+            names = x[1]
+            x = x[0]
+            #if i == 0:
+                #print(x)
             images = x['image'].float()
             labels= x['labels'].long()
             labels = labels.view(labels.numel())
@@ -240,17 +249,8 @@ def train_model(model, optimizer, criterion, device, num_epochs=1):
                       (epoch + 1, i + 1, running_loss / 2000))
                 check_accuracy(validation_loader, model)
                 running_loss = 0.0
-"""for i_batch, sample_batched in enumerate(train_loader):
-    print(i_batch, sample_batched['image'].size(),
-            sample_batched['labels'].size())
-    print(sample_batched)
-    print()
-    x = sample_batched['image'].float()
-    print(x)
-    print()
-    print("BUG")
-    print(sample_batched['labels'])"""
+
 
 train_model(model, optimizer, criterion, device, num_epochs)
 
-#check_accuracy(validation_loader, model)
+check_accuracy(validation_loader, model)
