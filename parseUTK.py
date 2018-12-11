@@ -1,6 +1,6 @@
 import os, csv
 
-with open("UTKfacesaligngenderW.csv", 'w') as f:
+with open("UTKfacesaligngenderO.csv", 'w') as f:
     writer = csv.writer(f)
     writer.writerow(["img_name","gender"])#"age","gender","race","date&time"])
     for path, dirs, files in os.walk("alignedimgs"):
@@ -9,5 +9,5 @@ with open("UTKfacesaligngenderW.csv", 'w') as f:
             if len(labels)==4:
                 print(labels[2])
                 labels[3] = labels[3][:-13]
-                if int(labels[2]) == 0:
+                if int(labels[2]) == 4:
                     writer.writerow([filename]+[labels[1]])
